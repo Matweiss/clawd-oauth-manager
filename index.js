@@ -10,10 +10,24 @@ const path = require('path');
 class OAuthManager {
   constructor() {
     this.tokensPath = process.env.OAUTH_TOKENS_PATH || './tokens.json';
-    this.client = new OAuth2Client(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
+    this.credsPath = process.env.GOOGLE_CREDENTIALS_PATH || './credentials.json';
+    this.credentials = null;
+  }
+
+  async loadCredentials() {
+    if (this.credentials) return this.credentials;
+    const data = await fs.readFile(this.credsPath, 'utf8');
+    const json = JSON.parse(data);
+    this.credentials = json.web || json.installed;
+    return this.credentials;
+  }
+
+  async getClient() {
+    const creds = await this.loadCredentials();
+    return new OAuth2Client(
+      creds.client_id,
+      creds.client_secret,
+      creds.redirect_uris[0]
     );
   }
 
@@ -36,7 +50,8 @@ class OAuthManager {
     const tokens = await this.loadTokens();
     if (!tokens) return null;
 
-    this.client.setCredentials(tokens);
+    const client = await this.getClient();
+    client.setCredentials(tokens);
     
     // Check if token expires in less than 5 minutes
     const expiryDate = tokens.expiry_date;
@@ -46,7 +61,7 @@ class OAuthManager {
     if (expiryDate && expiryDate - now < fiveMinutes) {
       console.log('🔄 Token expiring soon, refreshing...');
       
-      const { credentials } = await this.client.refreshAccessToken();
+      const { credentials } = await client.refreshAccessToken();
       await this.saveTokens(credentials);
       
       return credentials;

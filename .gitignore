@@ -3,3 +3,4 @@ tokens.json
 *.log
 .env
 .DS_Store
+credentials.json
