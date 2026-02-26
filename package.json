@@ -1,0 +1,15 @@
+{
+  "name": "clawd-oauth-manager",
+  "version": "1.0.0",
+  "description": "Automatic OAuth token refresh for Google services",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "refresh": "node refresh.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "google-auth-library": "^9.0.0",
+    "node-fetch": "^3.3.0"
+  }
+}
